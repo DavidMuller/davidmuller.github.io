@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+      integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css"
+      integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"
+      integrity="sha384-PwRUT/YqbnEjkZO0zZxNqcxACrXe+j766U2amXcgMg5457rve2Y7I6ZJSm2A0mS4"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjs@11.5.0/lib/browser/math.min.js"
+      integrity="sha384-lyk1iakc3vJYtFuexLv0ybpdIxL8PXH/XAyhBkYuaW1gBhc08sPvcnfS0wfLot1h"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"
+      integrity="sha384-i61gTtaoovXtAbKjo903+O55Jkn2+RtzHtvNez+yI49HAASvznhe9sZyjaSHTau9"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <title>Woodworking Calculator</title>
+  <body>
+    <div class="container-sm">
+      <p></p>
+      <div class="card">
+        <div class="card-body">
+          <p class="card-text">
+            Input arithmetic, and get results to the nearest tape measure
+            markings: 4ths, 8ths, 16ths, etc. Track your calculation history
+            (clears on page refresh).
+          </p>
+          <form onsubmit="return false;">
+            <div class="form-group">
+              <input
+                type="text"
+                class="form-control"
+                inputmode="search"
+                id="calculation-input"
+              />
+            </div>
+            <p></p>
+            <div class="form-group">
+              <button
+                type="button"
+                class="btn btn-outline-secondary btn-sm"
+                id="clear-input-button"
+              >
+                Clear Input
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-primary btn-sm"
+                id="nearest-tape-measure-calculate"
+              >
+                Calculate
+              </button>
+            </div>
+            <p></p>
+            <div class="form-group">
+              <div id="precision-checks">
+                <label>Precisions: </label>
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="inlineCheckbox1"
+                    value="4th"
+                    checked
+                  />
+                  <label class="form-check-label" for="inlineCheckbox1"
+                    >4th</label
+                  >
+                </div>
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="inlineCheckbox2"
+                    value="8th"
+                    checked
+                  />
+                  <label class="form-check-label" for="inlineCheckbox2"
+                    >8th</label
+                  >
+                </div>
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="inlineCheckbox3"
+                    value="16th"
+                    checked
+                  />
+                  <label class="form-check-label" for="inlineCheckbox3"
+                    >16th</label
+                  >
+                </div>
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="inlineCheckbox4"
+                    value="32nd"
+                    checked
+                  />
+                  <label class="form-check-label" for="inlineCheckbox4"
+                    >32nd</label
+                  >
+                </div>
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="inlineCheckbox5"
+                    value="64th"
+                  />
+                  <label class="form-check-label" for="inlineCheckbox5"
+                    >64th</label
+                  >
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div id="results">
+        <p></p>
+        <div id="current-result-div"></div>
+        <nav class="navbar navbar-light bg-light ps-3">
+          <span class="navbar-brand mb-0 h1">History</span>
+          <button
+            type="button"
+            class="btn btn-outline-secondary btn-sm mx-3"
+            id="clear-history-button"
+          >
+            Clear History
+          </button>
+        </nav>
+        <p></p>
+        <div id="history-div"></div>
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript">
+    /*
+    For example, to calculate the nearest 16th inch on a tape measure:
+
+      closestTapeMeasure(math.fraction('1/3'), 16)
+
+    ...returns 5/16.
+
+    Adapted from:
+      https://github.com/infusion/Fraction.js/blob/v4.2.0/README.md#rounding-a-fraction-to-the-closest-tape-measure-value
+    */
+    function closestTapeMeasure(frac, d) {
+      /*
+      Example for nearest 16th:
+      k/16 ≤ a/b < (k+1)/16
+      ⇔ k ≤ 16*a/b < (k+1)
+      ⇔ k = floor(16*a/b)
+      */
+      var nearestFrac = math.fraction(
+        math.round(d * math.fraction(frac).valueOf()),
+        d
+      );
+
+      // math.fraction seems to simplify by default
+      // e.g. 8/16 is simplified down to 1/2
+      var isSimplified = nearestFrac.d < d;
+      var multFactor = math.divide(d, nearestFrac.d);
+      var remainder = math.mod(d, nearestFrac.d);
+      var canBeUnsimplified = math.equal(remainder, 0);
+
+      // skip up-scaling if we're just working with a whole number.
+      // if we up-scale a whole number, math.js starts rendering
+      // things like "12 0/8"
+      var isWholeNumber = math.equal(math.mod(nearestFrac.n, nearestFrac.d), 0);
+
+      if (isSimplified && canBeUnsimplified && !isWholeNumber) {
+        // e.g. 1/2 * 8/8 = 8/16
+        nearestFrac.d = nearestFrac.d * multFactor;
+        nearestFrac.n = nearestFrac.n * multFactor;
+      }
+
+      return nearestFrac;
+    }
+
+    /*
+    e.g. 5/3 -> (1 + 2/3)
+    */
+    function getFractionText(frac) {
+      var whole = "";
+      var fracText = "";
+
+      if (frac.d === 1) {
+        fracText += frac.n;
+      } else {
+        if ((whole = math.floor(math.divide(frac.n, frac.d))) > 0) {
+          fracText += whole;
+          fracText += " + ";
+          remainder = math.mod(frac.n, frac.d);
+        } else {
+          remainder = frac.n;
+        }
+
+        fracText += remainder;
+        fracText += "/";
+        fracText += frac.d;
+      }
+
+      if (fracText.includes(" + ")) {
+        fracText = "(" + fracText + ")";
+      }
+
+      if (frac.s < 0) {
+        fracText = "-" + fracText;
+      }
+
+      return fracText;
+    }
+
+    function getLatexSVG(tex) {
+      var svg = katex.renderToString(tex, { throwOnError: false });
+      return $(svg);
+    }
+
+    function resultBag(calculationStr, label, evaluatedFrac, nearestFrac) {
+      var delta = math.subtract(nearestFrac, evaluatedFrac).valueOf();
+      var deltaIsZero = math.equal(delta, 0);
+      var deltaText = delta.toString();
+
+      var calculationLatex = math
+        .parse(calculationStr)
+        .toTex({ parenthesis: "keep" });
+
+      // passing `true` as the first argument gets us a mixed number:
+      // https://github.com/infusion/Fraction.js/tree/v4.2.0#string-tolatexexcludewholefalse
+      var evaluatedFracLatex = evaluatedFrac.toLatex(true);
+
+      var evaluatedFracAsDecimalLatex = evaluatedFrac.valueOf().toString();
+
+      // e.g. "2/4 + 3/4 = 7/4 = 1.75"
+      var fullCalculationLatex = calculationLatex;
+
+      // skip rendering the second/third equals numbers, if the
+      // latex is identical. e.g. don't render "1 + 2 = 3 = 3".
+      // instead, render "1 + 2 = 3"
+      if (evaluatedFracLatex !== fullCalculationLatex) {
+        fullCalculationLatex += " = " + evaluatedFracLatex;
+      }
+      if (evaluatedFracLatex !== evaluatedFracAsDecimalLatex) {
+        fullCalculationLatex += " = " + evaluatedFracAsDecimalLatex;
+      }
+
+      return {
+        calculationStr: calculationStr,
+        label: label,
+        evaluatedFrac: evaluatedFrac,
+        nearestFrac: nearestFrac,
+        calculationLatexSVG: getLatexSVG(calculationLatex),
+        fullCalculationLatex: fullCalculationLatex,
+        fullCalculationLatexSVG: getLatexSVG(fullCalculationLatex),
+        evaluatedFracText: getFractionText(evaluatedFrac),
+
+        // as above, passing `true` as the first argument gets us a mixed number:
+        // https://github.com/infusion/Fraction.js/tree/v4.2.0#string-tolatexexcludewholefalse
+        evaluatedFracLatexSVG: getLatexSVG(evaluatedFrac.toLatex(true)),
+
+        evaluatedDecimal: evaluatedFrac.valueOf(),
+        nearestFracText: getFractionText(nearestFrac),
+        nearestFracLatex: nearestFrac.toLatex(true),
+        nearestFracLatexSVG: getLatexSVG(nearestFrac.toLatex(true)),
+        nearestDecimal: nearestFrac.valueOf(),
+        delta: delta,
+        deltaText: deltaText,
+        deltaIsZero: deltaIsZero,
+      };
+    }
+
+    function getResultHTML(calculationStr, precisions, cardTitle) {
+      var resultHTML = $("<div>").attr("id", "calculated-result-div");
+      var cardDiv = $("<div>")
+        .attr("class", "card")
+        .attr("id", "result-card-div");
+      resultHTML.append(cardDiv);
+
+      var cardHeader = $("<div>").attr("class", "card-header text-center");
+      var timeSpan = $("<span>")
+        .text(new Date().toLocaleString())
+        .attr("class", "text-muted float-end");
+      cardHeader.append(timeSpan);
+      cardDiv.append(cardHeader);
+
+      var cardBodyDiv = $("<div>").attr("class", "card-body pt-1");
+      cardDiv.append(cardBodyDiv);
+
+      if (!calculationStr) {
+        var headerSpan = $("<span>").text("Error").attr("class", "fw-bolder");
+        cardHeader.prepend(headerSpan);
+        var leadingHeader = $("<h5>")
+          .attr("class", "card-title")
+          .text("Empty input");
+        cardBodyDiv.append(leadingHeader);
+        resultHTML.attr("isError", "true");
+        resultHTML.append($("<p>"));
+        return resultHTML;
+      }
+
+      if (!Array.isArray(precisions) || !precisions.length) {
+        var headerSpan = $("<span>").text("Error").attr("class", "fw-bolder");
+        cardHeader.prepend(headerSpan);
+        var leadingHeader = $("<h5>")
+          .attr("class", "card-title")
+          .text("Select at least one precision");
+        cardBodyDiv.append(leadingHeader);
+        resultHTML.attr("isError", "true");
+        resultHTML.append($("<p>"));
+        return resultHTML;
+      }
+
+      var errorMsg = null;
+      try {
+        var evaluatedFrac = math.evaluate(calculationStr);
+      } catch (error) {
+        console.error(error);
+        errorMsg = error.toString();
+      }
+      if (errorMsg !== null || typeof evaluatedFrac === "undefined") {
+        var msg = "Error";
+        if (errorMsg !== "") {
+          msg = errorMsg;
+        }
+        var headerSpan = $("<span>").text("Error").attr("class", "fw-bolder");
+        cardHeader.prepend(headerSpan);
+        var leadingHeader = $("<h5>").attr("class", "card-title").text(msg);
+        cardBodyDiv.append(leadingHeader);
+        resultHTML.attr("isError", "true");
+        resultHTML.append($("<p>"));
+        return resultHTML;
+      }
+
+      evaluatedFrac = math.fraction(evaluatedFrac);
+
+      precisionLookup = {
+        "4th": 4,
+        "8th": 8,
+        "16th": 16,
+        "32nd": 32,
+        "64th": 64,
+      };
+
+      var results = [];
+      for (const precision of precisions) {
+        if (precision in precisionLookup) {
+          var nearest = closestTapeMeasure(
+            evaluatedFrac,
+            precisionLookup[precision]
+          );
+          var result = resultBag(
+            calculationStr,
+            precision,
+            evaluatedFrac,
+            nearest
+          );
+          results.push(result);
+        } else {
+          console.error("unknown precision", precision);
+        }
+      }
+
+      // mark the closest entry
+      var smallestAbsDelta = Math.min(
+        ...results.map((item) => math.abs(item.delta))
+      );
+      for (const result of results) {
+        if (math.abs(result.delta) <= smallestAbsDelta) {
+          result.hasSmallestAbsDelta = true;
+          break;
+        }
+      }
+
+      firstResult = results[0];
+
+      if (cardTitle !== undefined && cardTitle !== "") {
+        var cardTitleSpan = $("<span>")
+          .text(cardTitle)
+          .attr("class", "fw-bolder");
+        cardHeader.append(cardTitleSpan);
+      }
+
+      var leadingHeaderDiv = $("<div>").attr("class", "mt-2");
+      var leadingHeader = $("<h6>").attr("class", "card-title");
+      leadingHeader.append(firstResult.fullCalculationLatexSVG);
+      leadingHeaderDiv.append(leadingHeader);
+      cardBodyDiv.append(leadingHeaderDiv);
+
+      var tableDiv = $("<div>").attr("class", "table-responsive");
+      var table = $("<table>").attr(
+        "class",
+        "table table-bordered table-striped text-center mb-0"
+      );
+      tableDiv.append(table);
+      cardBodyDiv.append(tableDiv);
+
+      var tableCaption = $("<caption>").text(
+        "Result: " + firstResult.evaluatedDecimal
+      );
+      table.append(tableCaption);
+
+      var headerRow = $("<tr>");
+      headerRow.append($("<th>").text("Precision"));
+      headerRow.append($("<th>").text("Nearest Fraction (Latex)"));
+      headerRow.append($("<th>").text("Difference with Result"));
+      headerRow.append($("<th>").text("As Decimal"));
+      headerRow.append($("<th>").text("Nearest Fraction (Text)"));
+
+      var tHead = $("<thead>");
+      tHead.append(headerRow);
+      table.append(tHead);
+
+      var tBody = $("<tbody>");
+      table.append(tBody);
+
+      for (const result of results) {
+        var row = $("<tr>");
+        row.append($("<th>").text(result.label));
+
+        var latexTD = $("<td>");
+        latexTD.attr("raw-latex", result.nearestFracLatex);
+        latexTD.append($(result.nearestFracLatexSVG));
+        row.append(latexTD);
+
+        deltaTD = $("<td>").text(result.deltaText);
+        if (result.hasSmallestAbsDelta) {
+          deltaTD.append($("<p>").text("(min abs. difference)"));
+        }
+        if (result.deltaIsZero) {
+          deltaTD.attr("class", "table-success");
+        }
+        row.append(deltaTD);
+
+        row.append($("<td>").text(result.nearestDecimal));
+        row.append($("<td>").text(result.nearestFracText));
+
+        tBody.append(row);
+      }
+
+      var rawInputSpan = $("<span>")
+        .text("Raw input: " + firstResult.calculationStr)
+        .attr("class", "text-muted");
+      cardBodyDiv.append(rawInputSpan);
+
+      resultHTML.append($("<p>"));
+
+      return resultHTML;
+    }
+
+    $(document).ready(function () {
+      function calculate(calculationStr, cardTitle) {
+        var selectedPrecisions = [];
+        $("#precision-checks input:checked").each(function () {
+          selectedPrecisions.push($(this).attr("value"));
+        });
+
+        var currentlyDisplayedIsError =
+          $("#calculated-result-div").first().attr("isError") === "true";
+
+        if (currentlyDisplayedIsError) {
+          $("#calculated-result-div").first().remove();
+        } else {
+          $("#calculated-result-div").first().prependTo("#history-div");
+        }
+
+        var result = getResultHTML(
+          calculationStr,
+          selectedPrecisions,
+          cardTitle
+        );
+        var resultIsError = result.attr("isError") === "true";
+
+        $("#current-result-div").prepend(result).hide();
+        $("#current-result-div").first().slideDown("fast");
+      }
+
+      function getCalculationStr() {
+        return $("#calculation-input").val().trim();
+      }
+
+      // render an example
+      var exampleStr = "(1 + 1/16) + .5";
+      $("#calculation-input").attr("placeholder", exampleStr);
+      calculate(exampleStr, "Example");
+
+      // bind the calculate button
+      $("#nearest-tape-measure-calculate").click(function () {
+        calculate(getCalculationStr(), "Output");
+      });
+
+      // bind the clear input button
+      $("#clear-input-button").click(function () {
+        $("#calculation-input").val("");
+        $("#calculation-input").attr("placeholder", exampleStr);
+      });
+
+      // also run calculate on Enter
+      // https://stackoverflow.com/a/6524335
+      $("#calculation-input").bind("enterKey", function (e) {
+        calculate(getCalculationStr(), "Output");
+      });
+      $("#calculation-input").keyup(function (e) {
+        if (e.key === "Enter" || e.keyCode == 13) {
+          $(this).trigger("enterKey");
+        }
+      });
+
+      // bind the clear history button
+      $("#clear-history-button").click(function () {
+        $("#history-div").empty();
+      });
+    });
+  </script>
+</html>
