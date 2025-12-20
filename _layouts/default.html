@@ -1,0 +1,47 @@
+<!-- primer is the default GH theme, this default.html is adapted from there -->
+<!-- https://github.com/pages-themes/primer/blob/d6cec310d15cebfce7b89f9ea18e8946bb489fa3/_layouts/default.html -->
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: "en-US" }}">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+{% seo %}
+    <link rel="stylesheet" href="{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}">
+  </head>
+  <body>
+    <!-- Use container-md to reduce width to 768px as per: -->
+    <!-- https://github.com/pages-themes/primer/pull/6 -->
+    <div class="container-md px-3 my-5 markdown-body">
+      {% if site.title and site.title != page.title %}
+      <div>
+        <h2 style="display: flex; justify-content: space-between;">
+          <span><a href="{{ "/" | absolute_url }}">David Muller</a></span>
+          <span><a style="text-align: right" href="https://pragprog.com/titles/dmpython/intuitive-python/">My book: Intuitive Python ↗</a></span>
+        </h2>
+      </div>
+      {% endif %}
+
+      {{ content }}
+
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        <h5>
+          <span>davidmuller.github.io</span>
+          <span> / </span>
+          <a href="{{ "/" | absolute_url }}">Home</a>
+          <span> / </span>
+          <a href="{{ "/woodworking-calculator.html" | absolute_url }}">Woodworking Calculator</a>
+          <span> / </span>
+          <a href=https://pragprog.com/titles/dmpython/intuitive-python/>My book: Intuitive Python ↗</a>
+        </h5>
+      </div>
+    </div>
+    <script>anchors.add();</script>
+    {% if jekyll.environment == "production" %}
+      <script data-goatcounter="https://davidmuller-blog.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+      <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7769d20b0d240bfbab7fadf967f5e8d"}'></script>
+    {% endif %}
+  </body>
+</html>
